@@ -1,7 +1,20 @@
 
 import { useEffect, useState } from "react";
-import { getProducts, addProduct, updateProduct, deleteProduct } from "../services/api";
-import { ArrowLeft, Plus, Pencil, Trash2, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  getProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct
+} from "../services/api";
+import {
+  ArrowLeft,
+  Plus,
+  Pencil,
+  Trash2,
+  Package,
+  LogOut
+} from "lucide-react";
 import "./Admin.css";
 
 const emptyForm = {
@@ -15,17 +28,28 @@ const emptyForm = {
 };
 
 function Admin() {
+  const navigate = useNavigate();
+
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    navigate("/admin-login", { replace: true });
+  };
+
   const loadProducts = async () => {
     try {
       const data = await getProducts();
       setProducts(data.products || []);
     } catch (error) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        handleLogout();
+        return;
+      }
       setMessage("Could not load products. Check the backend.");
     }
   };
@@ -36,10 +60,11 @@ function Admin() {
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
-    setForm({
-      ...form,
+
+    setForm((previous) => ({
+      ...previous,
       [name]: type === "checkbox" ? checked : value
-    });
+    }));
   };
 
   const handleSubmit = async (event) => {
@@ -66,6 +91,11 @@ function Admin() {
       setEditingId(null);
       await loadProducts();
     } catch (error) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        handleLogout();
+        return;
+      }
+
       setMessage(error.response?.data?.message || "Something went wrong.");
     } finally {
       setLoading(false);
@@ -74,6 +104,7 @@ function Admin() {
 
   const handleEdit = (product) => {
     setEditingId(product._id);
+
     setForm({
       name: product.name || "",
       description: product.description || "",
@@ -88,18 +119,28 @@ function Admin() {
   };
 
   const handleDelete = async (id) => {
-    const confirmed = window.confirm("Are you sure you want to delete this product?");
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this product?"
+    );
+
     if (!confirmed) return;
 
     try {
       await deleteProduct(id);
       setMessage("Product deleted successfully!");
+
       if (editingId === id) {
         setEditingId(null);
         setForm(emptyForm);
       }
+
       await loadProducts();
     } catch (error) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        handleLogout();
+        return;
+      }
+
       setMessage("Could not delete product.");
     }
   };
@@ -116,6 +157,15 @@ function Admin() {
         <a href="/" className="admin-back">
           <ArrowLeft size={18} /> Back to website
         </a>
+
+        <button
+          type="button"
+          className="admin-logout"
+          onClick={handleLogout}
+        >
+          <LogOut size={17} /> Logout
+        </button>
+
         <p>NAILVERSE BY SWE</p>
         <h1>Product Dashboard</h1>
         <span>Manage your nail collection</span>
@@ -222,7 +272,11 @@ function Admin() {
               </button>
 
               {editingId && (
-                <button type="button" className="admin-cancel" onClick={cancelEdit}>
+                <button
+                  type="button"
+                  className="admin-cancel"
+                  onClick={cancelEdit}
+                >
                   Cancel
                 </button>
               )}
@@ -264,9 +318,13 @@ function Admin() {
                   </div>
 
                   <div className="admin-product-actions">
-                    <button onClick={() => handleEdit(product)} aria-label="Edit product">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      aria-label="Edit product"
+                    >
                       <Pencil size={17} />
                     </button>
+
                     <button
                       className="admin-delete"
                       onClick={() => handleDelete(product._id)}
