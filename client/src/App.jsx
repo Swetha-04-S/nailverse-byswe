@@ -1,4 +1,6 @@
 
+import { useEffect, useState } from "react";
+
 import {
   ShoppingBag,
   Menu,
@@ -9,30 +11,39 @@ import {
   Mail
 } from "lucide-react";
 
+import { getProducts } from "./services/api";
+
 import "./App.css";
 
-const products = [
-  {
-    name: "Blush Romance",
-    category: "Soft Glam Collection",
-    price: "₹599",
-    image: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=700"
-  },
-  {
-    name: "French Elegance",
-    category: "Classic Collection",
-    price: "₹499",
-    image: "https://images.unsplash.com/photo-1610992015732-2449b76344bc?w=700"
-  },
-  {
-    name: "Pink Blossom",
-    category: "Floral Collection",
-    price: "₹699",
-    image: "https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=700"
-  }
-];
-
 function App() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Fetch products from MongoDB through Express API
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getProducts();
+
+      setProducts(data.products || []);
+    } catch (err) {
+      console.error("Product fetching error:", err);
+
+      setError(
+        "Unable to load products. Please check your backend connection."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
   return (
     <div className="website">
 
@@ -133,53 +144,101 @@ function App() {
         </div>
       </section>
 
-      {/* Shop Section */}
+      {/* Shop Section - Dynamic MongoDB Products */}
       <section className="shop-section" id="shop">
         <div className="section-heading">
           <p className="eyebrow">OUR COLLECTION</p>
+
           <h2>
             Find your <span>nail moment.</span>
           </h2>
+
           <p>Little details. Beautiful transformations.</p>
         </div>
 
-        <div className="product-grid">
-          {products.map((product, index) => (
-            <div className="product-card" key={index}>
-              <div className="product-image">
-                <img src={product.image} alt={product.name} />
-                <span className="product-tag">
-                  Nailverse Pick
-                </span>
-              </div>
+        {loading && (
+          <div className="product-message">
+            <p>Loading our beautiful nail collection...</p>
+          </div>
+        )}
 
-              <div className="product-info">
-                <div>
-                  <h3>{product.name}</h3>
-                  <p>{product.category}</p>
+        {error && (
+          <div className="product-message">
+            <p>{error}</p>
+
+            <button
+              className="primary-button"
+              onClick={fetchProducts}
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && products.length === 0 && (
+          <div className="product-message">
+            <p>No products available right now. Check back soon!</p>
+          </div>
+        )}
+
+        {!loading && !error && products.length > 0 && (
+          <div className="product-grid">
+
+            {products.map((product) => (
+              <div className="product-card" key={product._id}>
+
+                <div className="product-image">
+                  <img
+                    src={
+                      product.image ||
+                      "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=700"
+                    }
+                    alt={product.name}
+                  />
+
+                  <span className="product-tag">
+                    Nailverse Pick
+                  </span>
                 </div>
 
-                <strong>{product.price}</strong>
-              </div>
+                <div className="product-info">
+                  <div>
+                    <h3>{product.name}</h3>
+                    <p>{product.category}</p>
+                  </div>
 
-              <a href="#contact" className="product-link">
-                Enquire Now <ArrowRight size={15} />
-              </a>
-            </div>
-          ))}
-        </div>
+                  <strong>
+                    ₹{Number(product.price).toLocaleString("en-IN")}
+                  </strong>
+                </div>
+
+                <p className="product-description">
+                  {product.description}
+                </p>
+
+                <a href="#contact" className="product-link">
+                  Enquire Now <ArrowRight size={15} />
+                </a>
+
+              </div>
+            ))}
+
+          </div>
+        )}
       </section>
 
       {/* Services */}
       <section className="services-section" id="services">
         <div className="section-heading">
           <p className="eyebrow">WHAT WE OFFER</p>
+
           <h2>
             A little love for your <span>nails.</span>
           </h2>
         </div>
 
         <div className="service-grid">
+
           <div className="service-card">
             <span>01</span>
             <h3>Gel Polish</h3>
@@ -200,6 +259,7 @@ function App() {
             <p>Elegant extensions for your dream nails.</p>
             <strong>Starting at ₹599</strong>
           </div>
+
         </div>
       </section>
 
