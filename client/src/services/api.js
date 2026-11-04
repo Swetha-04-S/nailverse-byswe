@@ -1,7 +1,7 @@
 
 import axios from "axios";
 
-export const API = axios.create({
+const API = axios.create({
   baseURL:
     import.meta.env.VITE_API_URL ||
     "http://localhost:5000/api"
@@ -36,3 +36,7 @@ export const deleteProduct = async (id) => {
   const response = await API.delete(`/products/${id}`);
   return response.data;
 };
+
+// Supports both default and named imports
+export { API };
+export default API;
