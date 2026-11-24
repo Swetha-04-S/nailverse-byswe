@@ -3,7 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
-import User from "../models/User.js";
+import User from "../models/user.js";
 import customerAuthMiddleware from "../middleware/customerAuthMiddleware.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
