@@ -12,7 +12,7 @@ import {
 import App from "./App.jsx";
 import Admin from "./pages/Admin.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
-import Login from "./pages/Login.jsx";
+import Login from "./pages/login.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
 import Cart from "./pages/Cart.jsx";
 import Checkout from "./pages/Checkout.jsx";
